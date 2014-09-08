@@ -64,6 +64,15 @@ module fpga_top(
 	input                          rvalid,   // slave
 	input [`AXI_DATA_WIDTH - 1:0]  rdata,    // slave
 
+        // jtag
+        input tdi,
+	output tdo,
+	input tck,
+	input ir_in,
+	input virtual_state_sdr,
+	input virtual_state_udr,
+	input virtual_state_uir 
+
 //	output						dram_clk,
 //	output 						dram_cke, 
 //	output 						dram_cs_n, 
@@ -284,12 +293,19 @@ module fpga_top(
 
 	// This module loads data over JTAG into axi_internal_ram and resets
 	// the core.
-//	jtagloader jtagloader(
-//		.we(loader_we),
-//		.addr(loader_addr),
-//		.data(loader_data),
-//		.reset(jtag_reset),
-//		.clk(mem_clk));
+	jtagloader jtagloader(
+		.we(loader_we),
+		.addr(loader_addr),
+		.data(loader_data),
+		.reset(jtag_reset),
+		.clk(mem_clk),
+                .tdi(tdi),
+	        .tdo(tdo),
+	        .tck(tck),
+	        .ir_in(ir_in),
+	        .virtual_state_sdr(virtual_state_sdr),
+	        .virtual_state_udr(virtual_state_udr),
+	        .virtual_state_uir(virtual_state_uir));
 		
 	/* sdram_controller AUTO_TEMPLATE(
 		.clk(mem_clk),

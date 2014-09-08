@@ -21,8 +21,16 @@ module jtagloader(
 	output we,
 	output reg [31:0] addr,
 	output [31:0] data,
-	output reg reset
-	);
+	output reg reset,
+//form the jtag interfce of the top module
+        input tdi,
+	output tdo,
+	input tck,
+	input ir_in,
+	input virtual_state_sdr,
+	input virtual_state_udr,
+	input virtual_state_uir 
+);
 
 parameter IR_CTRL = 4'd0;
 parameter IR_ADDR = 4'd1;
@@ -32,10 +40,16 @@ initial reset = 0;
 
 wire update;
 wire [3:0] iir;
-wire tck, tdi, sdr, udr, uir;
+wire sdr, udr, uir;
 reg [31:0] dr;
 reg [3:0] ir;
 
+assign tdo = dr[0];
+assign iir = ir_in;
+assign sdr = virtual_state_sdr;
+assign udr = virtual_state_udr;
+assign uir = virtual_state_uir;
+/*
 jtag jtag0(
 	.tdi(tdi),
 	.tdo(dr[0]),
@@ -45,7 +59,7 @@ jtag jtag0(
 	.virtual_state_udr(udr),
 	.virtual_state_uir(uir)
 	);
-
+*/
 always @(posedge tck) begin
 	if (uir) ir <= iir;
 	if (sdr) dr <= { tdi, dr[31:1] };
