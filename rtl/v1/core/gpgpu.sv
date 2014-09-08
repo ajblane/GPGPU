@@ -20,7 +20,6 @@
 
 `include "defines.sv"
 
-
 //
 // Top level block for GPGPU
 //
@@ -31,33 +30,8 @@ module gpgpu
 	output            processor_halt,
 
 	// AXI external memory interface
-	//axi_interface     axi_bus,
-	// Write address channel
-        output[31:0]      awaddr,  // master
-        output[7:0]       awlen,   // master
-        output            awvalid, // master
-        input             awready, // slave
-        // Write data channel
-	output [`AXI_DATA_WIDTH - 1:0] wdata,    // master
-	output                         wlast,    // master
-	output                         wvalid,   // master
-	input                          wready,   // slave
-
-	// Write response channel
-	input                         bvalid,   // slave
-	output                        bready,   // master
-
-	// Read address channel
-	output [31:0]                  araddr,   // master
-	output [7:0]                   arlen,    // master
-	output                         arvalid,  // master
-	input                          arready,  // slave
+	axi_interface     axi_bus,
 	
-	// Read data channel
-	output                         rready,   // master
-	input                          rvalid,   // slave
-	input [`AXI_DATA_WIDTH - 1:0]  rdata,    // slave
-        							        
 	// Non-cacheable memory signals
 	output            io_write_en,
 	output            io_read_en,
@@ -65,24 +39,6 @@ module gpgpu
 	output[31:0]      io_write_data,
 	input [31:0]      io_read_data);
 
-        axi_interface axi_bus();
-assign awaddr  =axi_bus.awaddr ; // master       
-assign awlen   =axi_bus.awlen  ; // master
-assign awvalid =axi_bus.awvalid; // master
-assign axi_bus.awready =awready; // slave
-assign wdata   =axi_bus.wdata  ; // master
-assign wlast   =axi_bus.wlast  ; // master
-assign wvalid  =axi_bus.wvalid ; // master
-assign axi_bus.wready  =wready ; // slave
-assign axi_bus.bvalid  =bvalid ; // slave
-assign bready  =axi_bus.bready ; // master
-assign araddr  =axi_bus.araddr ; // master
-assign arlen   =axi_bus.arlen  ; // master
-assign arvalid =axi_bus.arvalid; // master
-assign axi_bus.arready =arready; // slave
-assign rready  =axi_bus.rready ; // master
-assign axi_bus.rvalid  =rvalid ; // slave
-assign axi_bus.rdata   =rdata  ; // slave
 	/*AUTOWIRE*/
 	// Beginning of automatic wires (for undeclared instantiated-module outputs)
 	wire		l2req_ready;		// From l2_cache of l2_cache.v
