@@ -21,8 +21,8 @@
 `include "../core/defines.sv"
 
 module fpga_top(
-	input						clk50,
-
+	input			   clk50,
+        input                      reset_n,
 	// Der blinkenlights
 //	output logic[17:0]			red_led,
 //	output logic[8:0]			green_led,
@@ -37,33 +37,51 @@ module fpga_top(
 
 	// SDRAM AXI	
 	// AXI external memory interface
-	//axi_interface     axi_bus,
-	// Write address channel
-        output[31:0]      awaddr,  // master
-        output[7:0]       awlen,   // master
-        output            awvalid, // master
-        input             awready, // slave
-        // Write data channel
-	output [`AXI_DATA_WIDTH - 1:0] wdata,    // master
-	output                         wlast,    // master
-	output                         wvalid,   // master
-	input                          wready,   // slave
-
-	// Write response channel
-	input                         bvalid,   // slave
-	output                        bready,   // master
-
-	// Read address channel
-	output [31:0]                  araddr,   // master
-	output [7:0]                   arlen,    // master
-	output                         arvalid,  // master
-	input                          arready,  // slave
-	
-	// Read data channel
-	output                         rready,   // master
-	input                          rvalid,   // slave
-	input [`AXI_DATA_WIDTH - 1:0]  rdata,    // slave
-
+        //AXI write address bus ------------------------------------------
+        output   [AXI_ID_W-1:0]      axm_awid,
+        output   [AXI_ADDRESS_W-1:0] axm_awaddr,
+        output   [ 3:0]              axm_awlen,  //burst length is 1 + (0 - 15)
+        output   [ 2:0]              axm_awsize,  //size of each transfer in burst
+        output   [ 1:0]              axm_awburst, //for bursts>1, accept only incr burst=01
+        output   [ 1:0]              axm_awlock,  //only normal access supported axs_awlock=00
+        output   [ 3:0]              axm_awcache, 
+        output   [ 2:0]              axm_awprot,
+        output                       axm_awvalid, //master addr valid
+        input                      axm_awready, //slave ready to accept
+     
+        //AXI write data bus ----------------------------------------------
+        output   [AXI_ID_W-1:0]      axm_wid,
+        output   [AXI_DATA_W-1:0]    axm_wdata,
+        output   [AXI_NUMBYTES-1:0]  axm_wstrb,   //1 strobe per byte
+        output                       axm_wlast,   //last transfer in burst
+        output                       axm_wvalid,  //master data valid
+        input                      axm_wready,  //slave ready to accept
+     
+        //AXI write response bus ------------------------------------------
+        input  [AXI_ID_W-1:0]      axm_bid,
+        input  [ 1:0]              axm_bresp,
+        input                      axm_bvalid,
+        output                       axm_bready,
+        
+        //AXI read address bus --------------------------------------------
+        output   [AXI_ID_W-1:0]      axm_arid,
+        output   [AXI_ADDRESS_W-1:0] axm_araddr,
+        output   [ 3:0]              axm_arlen,   //burst length - 1 to 16
+        output   [ 2:0]              axm_arsize,  //size of each transfer in burst
+        output   [ 1:0]              axm_arburst, //for bursts>1, accept only incr burst=01
+        output   [ 1:0]              axm_arlock,  //only normal access supported axs_awlock=00
+        output   [ 3:0]              axm_arcache, 
+        output   [ 2:0]              axm_arprot,
+        output                       axm_arvalid, //master addr valid
+        input                      axm_arready, //slave ready to accept
+     
+        //AXI read data bus -----------------------------------------------
+        input  [AXI_ID_W-1:0]      axm_rid,
+        input  [AXI_DATA_W-1:0]    axm_rdata,
+        input  [ 1:0]              axm_rresp,
+        input                      axm_rlast, //last transfer in burst
+        input                      axm_rvalid,//slave data valid
+        output                       axm_rready,//master ready to accept
         // jtag
         input tdi,
 	output tdo,
@@ -94,6 +112,13 @@ module fpga_top(
 //	output 						vga_vs,
 //	output 						vga_sync_n
 );
+        // PARAMETERS for AXI --------------------------------------------
+        parameter  AXI_ID_W            = 4;  // width of ID fields
+        parameter  AXI_ADDRESS_W       = 12; // address width
+        parameter  AXI_DATA_W          = 32; // data symbol width 
+        parameter  AXI_NUMBYTES        = 4;  // number of bytes per word
+        localparam SIZE                = 2 ** AXI_ADDRESS_W;
+
 
 	// We always access the full word width, so hard code these to active (low)
 //	assign dram_dqm = 4'b0000;
@@ -116,7 +141,7 @@ module fpga_top(
 	axi_interface axi_bus_s1();
 	wire jtag_reset;
 	logic simulator_reset = 0;
-	wire global_reset = simulator_reset || jtag_reset;
+	wire global_reset = simulator_reset || jtag_reset || reset_n;
 	wire[31:0] loader_addr;
 	wire[31:0] loader_data;
 	wire loader_we;
@@ -312,23 +337,23 @@ module fpga_top(
 		.reset(global_reset),
 		.axi_bus(axi_bus_m1),);
 	*/
-assign awaddr  =axi_bus_m1.awaddr ; // master       
-assign awlen   =axi_bus_m1.awlen  ; // master
-assign awvalid =axi_bus_m1.awvalid; // master
-assign axi_bus_m1.awready =awready; // slave
-assign wdata   =axi_bus_m1.wdata  ; // master
-assign wlast   =axi_bus_m1.wlast  ; // master
-assign wvalid  =axi_bus_m1.wvalid ; // master
-assign axi_bus_m1.wready  =wready ; // slave
-assign axi_bus_m1.bvalid  =bvalid ; // slave
-assign bready  =axi_bus_m1.bready ; // master
-assign araddr  =axi_bus_m1.araddr ; // master
-assign arlen   =axi_bus_m1.arlen  ; // master
-assign arvalid =axi_bus_m1.arvalid; // master
-assign axi_bus_m1.arready =arready; // slave
-assign rready  =axi_bus_m1.rready ; // master
-assign axi_bus_m1.rvalid  =rvalid ; // slave
-assign axi_bus_m1.rdata   =rdata  ; // slave
+assign axm_awaddr  =axi_bus_m1.awaddr ; // master       
+assign axm_awlen   =axi_bus_m1.awlen  ; // master
+assign axm_awvalid =axi_bus_m1.awvalid; // master
+assign axi_bus_m1.awready =axm_awready; // slave
+assign axm_wdata   =axi_bus_m1.wdata  ; // master
+assign axm_wlast   =axi_bus_m1.wlast  ; // master
+assign axm_wvalid  =axi_bus_m1.wvalid ; // master
+assign axi_bus_m1.wready  =axm_wready ; // slave
+assign axi_bus_m1.bvalid  =axm_bvalid ; // slave
+assign axm_bready  =axi_bus_m1.bready ; // master
+assign axm_araddr  =axi_bus_m1.araddr ; // master
+assign axm_arlen   =axi_bus_m1.arlen  ; // master
+assign axm_arvalid =axi_bus_m1.arvalid; // master
+assign axi_bus_m1.arready =axm_arready; // slave
+assign axm_rready  =axi_bus_m1.rready ; // master
+assign axi_bus_m1.rvalid  = axm_rvalid ; // slave
+assign axi_bus_m1.rdata   = axm_rdata  ; // slave
 //	sdram_controller #(
 //			.DATA_WIDTH(32), 
 //			.ROW_ADDR_WIDTH(13), 
