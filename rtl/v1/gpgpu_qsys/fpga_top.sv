@@ -81,15 +81,15 @@ module fpga_top(
         input  [ 1:0]              axm_rresp,
         input                      axm_rlast, //last transfer in burst
         input                      axm_rvalid,//slave data valid
-        output                       axm_rready,//master ready to accept
+        output                     axm_rready //master ready to accept
         // jtag
-        input tdi,
-	output tdo,
-	input tck,
-	input ir_in,
-	input virtual_state_sdr,
-	input virtual_state_udr,
-	input virtual_state_uir 
+//      input tdi,
+//	output tdo,
+//	input tck,
+//	input ir_in,
+//	input virtual_state_sdr,
+//	input virtual_state_udr,
+//	input virtual_state_uir 
 
 //	output						dram_clk,
 //	output 						dram_cke, 
@@ -224,14 +224,14 @@ module fpga_top(
 //		end
 //	end
 	
-	always_comb
-	begin
-		case (io_address)
-			'h18, 'h1c: io_read_data = uart_read_data;
-			'h24: io_read_data = timer_val;
-			default: io_read_data = 0;
-		endcase
-	end
+//	always_comb
+//	begin
+//		case (io_address)
+//			'h18, 'h1c: io_read_data = uart_read_data;
+//			'h24: io_read_data = timer_val;
+//			default: io_read_data = 0;
+//		endcase
+//	end
 
 
 //`ifdef ENABLE_TRACE_MODULE
@@ -289,72 +289,73 @@ module fpga_top(
 		.clk(mem_clk),
 		.reset(global_reset));
 	*/
-	axi_interconnect axi_interconnect(
-		/*AUTOINST*/
-					  // Interfaces
-					  .axi_bus_m0		(axi_bus_m0),
-					  .axi_bus_m1		(axi_bus_m1),
-					  .axi_bus_s0		(axi_bus_s0),
-					  .axi_bus_s1		(axi_bus_s1),
-					  // Inputs
-					  .clk			(mem_clk),	 // Templated
-					  .reset		(global_reset));	 // Templated
-			  
-	// Internal SRAM.  The system boots out of this.
-	/* axi_internal_ram AUTO_TEMPLATE(
-		.clk(mem_clk),
-		.reset(global_reset),
-		.axi_bus(axi_bus_m0),);
-	*/
-	axi_internal_ram #(.MEM_SIZE('h800)) axi_internal_ram(
-		/*AUTOINST*/
-							      // Interfaces
-							      .axi_bus		(axi_bus_m0),	 // Templated
-							      // Inputs
-							      .clk		(mem_clk),	 // Templated
-							      .reset		(global_reset),	 // Templated
-							      .loader_we	(loader_we),
-							      .loader_addr	(loader_addr[31:0]),
-							      .loader_data	(loader_data[31:0]));
+//	axi_interconnect axi_interconnect(
+//		/*AUTOINST*/
+//					  // Interfaces
+//					  .axi_bus_m0		(axi_bus_m0),
+//					  .axi_bus_m1		(axi_bus_m1),
+//					  .axi_bus_s0		(axi_bus_s0),
+//					  .axi_bus_s1		(axi_bus_s1),
+//					  // Inputs
+//					  .clk			(mem_clk),	 // Templated
+//					  .reset		(global_reset));	 // Templated
+//			  
+//	// Internal SRAM.  The system boots out of this.
+//	/* axi_internal_ram AUTO_TEMPLATE(
+//		.clk(mem_clk),
+//		.reset(global_reset),
+//		.axi_bus(axi_bus_m0),);
+	
+
+//	axi_internal_ram #(.MEM_SIZE('h800)) axi_internal_ram(
+//		/*AUTOINST*/
+//							      // Interfaces
+//							      .axi_bus		(axi_bus_m0),	 // Templated
+//							      // Inputs
+//							      .clk		(mem_clk),	 // Templated
+//							      .reset		(global_reset),	 // Templated
+//							      .loader_we	(loader_we),
+//							      .loader_addr	(loader_addr[31:0]),
+//							      .loader_data	(loader_data[31:0]));
 
 	// This module loads data over JTAG into axi_internal_ram and resets
 	// the core.
-	jtagloader jtagloader(
-		.we(loader_we),
-		.addr(loader_addr),
-		.data(loader_data),
-		.reset(jtag_reset),
-		.clk(mem_clk),
-                .tdi(tdi),
-	        .tdo(tdo),
-	        .tck(tck),
-	        .ir_in(ir_in),
-	        .virtual_state_sdr(virtual_state_sdr),
-	        .virtual_state_udr(virtual_state_udr),
-	        .virtual_state_uir(virtual_state_uir));
+//	jtagloader jtagloader(
+//		.we(loader_we),
+//		.addr(loader_addr),
+//		.data(loader_data),
+//		.reset(jtag_reset),
+//		.clk(mem_clk),
+//              .tdi(tdi),
+//	        .tdo(tdo),
+//	        .tck(tck),
+//	        .ir_in(ir_in),
+//	        .virtual_state_sdr(virtual_state_sdr),
+//	        .virtual_state_udr(virtual_state_udr),
+//	        .virtual_state_uir(virtual_state_uir));
 		
 	/* sdram_controller AUTO_TEMPLATE(
 		.clk(mem_clk),
 		.reset(global_reset),
 		.axi_bus(axi_bus_m1),);
 	*/
-assign axm_awaddr  =axi_bus_m1.awaddr + SDRAM_START_ADDRESS ;// master       
-assign axm_awlen   =axi_bus_m1.awlen  ; // master
-assign axm_awvalid =axi_bus_m1.awvalid; // master
-assign axi_bus_m1.awready =axm_awready; // slave
-assign axm_wdata   =axi_bus_m1.wdata  ; // master
-assign axm_wlast   =axi_bus_m1.wlast  ; // master
-assign axm_wvalid  =axi_bus_m1.wvalid ; // master
-assign axi_bus_m1.wready  =axm_wready ; // slave
-assign axi_bus_m1.bvalid  =axm_bvalid ; // slave
-assign axm_bready  =axi_bus_m1.bready ; // master
-assign axm_araddr  =axi_bus_m1.araddr ; // master
-assign axm_arlen   =axi_bus_m1.arlen  ; // master
-assign axm_arvalid =axi_bus_m1.arvalid; // master
-assign axi_bus_m1.arready =axm_arready; // slave
-assign axm_rready  =axi_bus_m1.rready ; // master
-assign axi_bus_m1.rvalid  = axm_rvalid ; // slave
-assign axi_bus_m1.rdata   = axm_rdata  ; // slave
+assign axm_awaddr  =axi_bus_m0.awaddr + SDRAM_START_ADDRESS ;// master       
+assign axm_awlen   =axi_bus_m0.awlen  ; // master
+assign axm_awvalid =axi_bus_m0.awvalid; // master
+assign axi_bus_m0.awready =axm_awready; // slave
+assign axm_wdata   =axi_bus_m0.wdata  ; // master
+assign axm_wlast   =axi_bus_m0.wlast  ; // master
+assign axm_wvalid  =axi_bus_m0.wvalid ; // master
+assign axi_bus_m0.wready  =axm_wready ; // slave
+assign axi_bus_m0.bvalid  =axm_bvalid ; // slave
+assign axm_bready  =axi_bus_m0.bready ; // master
+assign axm_araddr  =axi_bus_m0.araddr ; // master
+assign axm_arlen   =axi_bus_m0.arlen  ; // master
+assign axm_arvalid =axi_bus_m0.arvalid; // master
+assign axi_bus_m0.arready =axm_arready; // slave
+assign axm_rready  =axi_bus_m0.rready ; // master
+assign axi_bus_m0.rvalid  = axm_rvalid ; // slave
+assign axi_bus_m0.rdata   = axm_rdata  ; // slave
 //	sdram_controller #(
 //			.DATA_WIDTH(32), 
 //			.ROW_ADDR_WIDTH(13), 
