@@ -17,21 +17,29 @@
 # Boston, MA  02110-1301, USA.
 # 
 
-UARCH_VERSION ?= v1
+JAVAC := $(shell which javac)
 
 all:
-	cd tools/simulator && make
-	cd tools/mkbmp && make
-	cd rtl/$(UARCH_VERSION) && make
+	cd tools/emulator && make
+	cd rtl/ && make
+	cd software/libc && make
+	cd software/librender && make
+	cd software/libos && make
+ifneq ($(JAVAC),)
+	cd tools/visualizer && make
+endif
 	
 test: all FORCE
-	cd tests/directed_verification/ && ./runtest.py
-	#cd tests/cosimulation && ./runtest.sh random_*.s
+	cd tests/cosimulation && ./runtest.sh *.s
+	export USE_VERILATOR=1 && cd tests/compiler && ./runtest.sh
 	
 clean:
-	cd tools/simulator && make clean
-	cd tools/mkbmp && make clean
-	cd rtl/$(UARCH_VERSION) && make clean
+	cd tools/emulator && make clean
+	cd software/libc && make clean
+	cd software/librender && make clean
+	cd software/libos && make clean
+	cd rtl/ && make clean
+	rm -rf bin/
 
 FORCE:
 

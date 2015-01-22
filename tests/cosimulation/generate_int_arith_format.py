@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # 
 # Copyright (C) 2011-2014 Jeff Bush
 # 
@@ -43,7 +44,9 @@ binops = [
 	'xor',
 	'add_i',
 	'sub_i',
-	'mul_i',
+	'mull_i',
+	'mulh_u',
+	'mulh_i',
 	'ashr',
 	'shr',
 	'shl',

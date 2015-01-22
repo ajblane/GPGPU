@@ -17,7 +17,7 @@
 # Boston, MA  02110-1301, USA.
 # 
 
-
+BINDIR=../../bin
 OBJDIR=OBJECTS
 CFLAGS=-Wall -W -g
 
@@ -26,7 +26,7 @@ SRCS=serial_boot.c
 OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
 DEPS := $(SRCS:%.c=$(OBJDIR)/%.d)
 
-serial_boot: $(OBJS)
+$(BINDIR)/serial_boot: $(OBJS)
 	gcc -g -o $@ $(OBJS)
 
 -include $(DEPS)
@@ -36,7 +36,10 @@ $(OBJDIR)/%.o : %.c
 	gcc $(CFLAGS) -o $@ -c $<
 	gcc $(CFLAGS) -o $(OBJDIR)/$*.d -MM $<
 
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
 clean:
 	rm -rf $(OBJDIR)
-	rm -rf serial_boot
+	rm -f $(BINDIR)/serial_boot
 

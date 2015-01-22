@@ -1,72 +1,120 @@
-This project is a multi-core GPGPU (general purpose graphics processing unit) IP core, implemented in SystemVerilog. 
-Documentation is available here: https://github.com/jbush001/GPGPU/wiki.  
-Pull requests/contributions are welcome.
+# Nyuzi Processor
 
-## Required Tools/Libraries
-* Host toolchain: GCC 4.7+ or Clang 4.2+
-* Python 2.7
-* Verilator (3.862 or later) (http://www.veripool.org/projects/verilator/wiki/Installing)
-* libreadline-dev (MacOS already has this; may need to install on Linux)
-* C/C++ cross compiler toolchain targeting this architecture (https://github.com/jbush001/LLVM-GPGPU)
+<img src="https://github.com/jbush001/NyuziProcessor/wiki/teapot-icon.png">
 
-On Ubuntu, most of these (with the exception of the cross compiler) can be be installed using the package manager: sudo apt-get install verilator gcc g++ python libreadline-dev. However, if you are not on a recent distribution, they may be too old, in which case you'll need to build them manually.
+Nyuzi is a GPGPU processor core implemented in SystemVerilog. It features
+a modern design, including a vector floating point pipeline, fine grained 
+hardware multithreading, multiprocessor support, and a coherent L1/L2 cache 
+hierarchy. It is fully synthesizable and the core features have been 
+validated on FPGA. This project also includes a C++ toolchain based on LLVM, 
+an emulator, software libraries, and verification tests. It is useful as a 
+platform for microarchitecture experimentation, performance modeling, and 
+parallel software development.   
 
-I've run this on Linux and MacOS X (Lion). I have not tested this on Windows, although I would expect it to work in Cygwin, potentially with some modifications.
+License: GPLv2/LGPLv2.  
+Documentation: https://github.com/jbush001/NyuziProcessor/wiki  
+Mailing list: https://groups.google.com/forum/#!forum/nyuzi-processor-dev  
 
-### To run on FPGA
-* USB Blaster JTAG tools (https://github.com/swetland/jtag)
-* libusb-1.0 (required for above)
-* Quartus II FPGA design software (http://www.altera.com/products/software/quartus-ii/web-edition/qts-we-index.html)
+# Running in Verilog Simulation
 
-### Optional:
-* Emacs + verilog mode tools, for AUTOWIRE/AUTOINST http://www.veripool.org/wiki/verilog-mode. (Note that this doesn't require using Emacs as an editor. Using 'make autos' in the rtl/v1/ directory will run this operation in batch mode if the tools are installed).
-* Java (J2SE 6+) for visualizer app 
-* GTKWave (or similar) for analyzing waveform files
+This environment allows cycle-accurate simulation of the hardware without an FPGA. 
 
-## Running in Verilog simulation
+## Prerequisites
 
-### To build tools and verilog models:
+The following software packages are required. 
 
-First, you must download and build the LLVM toolchain from here: https://github.com/jbush001/LLVM-GPGPU. The README file in the root directory provides instructions.
+1. GCC 4.8+ or Apple Clang 4.2+
+2. Python 2.7
+3. [Verilator 3.864+](http://www.veripool.org/projects/verilator/wiki/Installing).  
+4. C/C++ cross compiler toolchain targeting this architecture. Download and 
+   build from https://github.com/jbush001/NyuziToolchain using instructions
+   in the README file in that repository.
+5. libsdl 2.0
+6. ImageMagick (to create framebuffer grabs from 3D engine)
+7. Optional: Emacs v23.2+, for 
+   [AUTOWIRE/AUTOINST](http://www.veripool.org/projects/verilog-mode/wiki/Verilog-mode_veritedium). (This can be used in batch mode by typing 'make autos' in the rtl/ directory). 
+8. Optional: Java (J2SE 6+) for visualizer app 
+9. Optional: [GTKWave](http://gtkwave.sourceforge.net/) for analyzing waveform files 
 
-Once this is done, from the top directory of this project:
+### Linux
+On Linux, these can be installed using the built-in package manager (apt-get, yum, etc). 
+Here is the command line for Ubuntu:
 
-    make
+    sudo apt-get install gcc g++ python emacs openjdk-7-jdk gtkwave imagemagick libsdl2-dev
 
-_By default, everything will use the version 1 microarchitecture located in rtl/v1. They can be made to use the v2 
-microarchitecture (which is still in development) by setting the UARCH_VERSION environment variable to 'v2'_
+Some package managers do have verilator, but the version is pretty old. Bug 
+fixes in more recent versions are necessary for this to run correctly, so 
+you may need to build it manually (typing `verilator --version` will indicate if your
+version is correct)
 
-### Running verification tests (in Verilog simulation)
+### MacOS
+MacOS should have python by default. You will need to install XCode from the App Store 
+to get the host compiler. To install the remaining packages, I would recommend a 
+package manager like MacPorts. The command line for that would be:
 
-From the top directory: 
+    sudo port install imagemagick libsdl2
 
-    make test
+### Windows
+I have not tested this on Windows. Many of the libraries are already cross platform, so
+it should theoretically be possible.
 
-### Running 3D Engine (in Verilog simulation)
+## Building and running
 
-    cd firmware/3D-renderer
-    make verirun
+1. Build verilog models, libraries, and tools. From the top directory of this 
+project, type:
 
-(output image stored in fb.bmp)
+        make
 
-## Running on FPGA
-This runs on Terasic's DE2-115 evaluation board. These instructions are for Linux only.
+2. To run verification tests (in Verilog simulation). From the top directory: 
 
-- Build USB blaster command line tools (https://github.com/swetland/jtag) 
- * Update your PATH environment variable to point the directory where you built the tools.  
- * Create a file /etc/udev/rules.d/99-custom.rules and add the line: ATTRS{idVendor}=="09fb" , MODE="0660" , GROUP="plugdev" 
-- Build the bitstream (ensure quartus binary directory is in your PATH, by default installed in ~/altera/13.1/quartus/bin/)
-<pre>
-    cd rtl/v1/fpga/de2-115
-    make
-</pre>
-- Load the bitstream onto the board (this only needs to be done once each time the board is power cycled)
-<pre>
-    make program 
-</pre>
-- Load program into memory and execute it using the runit script as below.   The script assembles the source and uses the jload command to transfer the program over the USB blaster cable that was used to load the bitstream.  jload will automatically reset the processor as a side effect, so the bitstream does not need to be reloaded each time.
-<pre>
-cd ../../../tests/fpga/blinky
-./runit.sh
-</pre>
+        make test
+
+3. To render a teapot (output image stored in framebuffer.png)
+
+        cd tests/render/teapot
+        make verirun
+
+# Running on FPGA
+
+This currently only works under Linux.  It uses Terasic's [DE2-115 evaluation board](http://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&No=502).
+
+## Prerequisites
+The following packages must be installed:
+
+1. libusb-1.0
+2. Brian Swetland's [USB Blaster JTAG tools](https://github.com/swetland/jtag)
+3. [Quartus II FPGA design software] 
+   (http://www.altera.com/products/software/quartus-ii/web-edition/qts-we-index.html)
+4. C/C++ cross compiler toolchain described above https://github.com/jbush001/NyuziToolchain.
+
+## Building and running
+1. Build USB blaster command line tools
+ * Update your PATH environment variable to point the directory where you 
+   built the tools.
+ * Create a file /etc/udev/rules.d/99-custom.rules and add the line (this 
+   allows using USB blaster tools without having to be root)
+
+            ATTRS{idVendor}=="09fb" , MODE="0660" , GROUP="plugdev" 
+
+2. Build the bitstream (ensure quartus binary directory is in your PATH, by
+   default installed in ~/altera/[version]/quartus/bin/)
+
+        cd rtl/fpga/de2-115
+        make
+
+3. Make sure the FPGA board is in JTAG mode by setting SW19 to 'RUN'
+4. Load the bitstream onto the FPGA (note that this will be lost if the FPGA 
+   is powered off).
+
+        make program 
+
+5.  Load program into memory and execute it using the runit script as below.
+    The script assembles the source and uses the jload command to transfer
+    the program over the USB blaster cable that was used to load the bitstream.
+    jload will automatically reset the processor as a side effect, so the
+    bitstream does not need to be reloaded each time. This test will blink the
+    red LEDs on the dev board in sequence.
+
+        cd ../../../tests/fpga/blinky
+        ./runit.sh
 

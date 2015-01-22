@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # 
 # Copyright (C) 2011-2014 Jeff Bush
 # 
@@ -23,40 +24,50 @@
 # Prints a breakdown of time spent per function 
 #
 
-import sys, re
+import sys
+import re
 
 symbolre = re.compile('(?P<addr>[A-Fa-f0-9]+) g\s+F\s+\.text\s+[A-Fa-f0-9]+\s+(?P<symbol>\w+)')
 
-# Read symbols
-functions = []
+functions = []	# Each element is (address, name)
 counts = {}
-f = open(sys.argv[1], 'r')
-for line in f.readlines():
-	got = symbolre.search(line)
-	if got:
-		sym = got.group('symbol')
-		functions += [(int(got.group('addr'), 16), sym)]
-		counts[sym] = 0
-
-f.close()
 
 def findFunction(pc):
-	for address, name in reversed(functions):
-		if pc >= address:
-			return name
+	global functions
+	
+	low = 0
+	high = len(functions)
+	while low < high:
+		mid = (low + high) / 2
+		if pc < functions[mid][0]:	
+			high = mid
+		else:
+			low = mid + 1
 
-	return None
+	if low == len(functions):
+		return None
+
+	return functions[low - 1][1]
+
+# Read symbols
+with open(sys.argv[1], 'r') as f:
+	for line in f.readlines():
+		got = symbolre.search(line)
+		if got:
+			sym = got.group('symbol')
+			functions += [(int(got.group('addr'), 16), sym)]
+			counts[sym] = 0
+
+functions.sort(key=lambda a: a[0])
 
 # Read profile trace
 linesProcessed = 0
-f = open(sys.argv[2], 'r')
-for line in f.readlines():
-	pc = int(line, 16)
-	func = findFunction(pc)
-	if func:
-		counts[func] += 1
-
-f.close()
+with open(sys.argv[2], 'r') as f:
+	for line in f.readlines():
+		pc = int(line, 16)
+		func = findFunction(pc)
+		if func:
+			counts[func] += 1
 
 totalCycles = 0
 sortedTab = []

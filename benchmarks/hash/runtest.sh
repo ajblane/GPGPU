@@ -17,12 +17,9 @@
 # Boston, MA  02110-1301, USA.
 # 
 
-
-# Default version if not set in environment
-: ${UARCH_VERSION=v1}
-
-COMPILER_DIR=/usr/local/llvm-vectorproc/bin
-VERILATOR=../../rtl/$UARCH_VERSION/obj_dir/Vverilator_tb
+BINDIR=../../bin
+COMPILER_DIR=/usr/local/llvm-nyuzi/bin
+VERILATOR=$BINDIR/verilator_model
 CC=$COMPILER_DIR/clang
 ELF2HEX=$COMPILER_DIR/elf2hex
 HEXFILE=WORK/program.hex
@@ -32,12 +29,13 @@ mkdir -p WORK
 
 function compileAndRun {
 	# Build
-	$CC -O3 -o $ELFFILE $1 start.s
+	$CC -O3 -o $ELFFILE $1 start.s -I../../software/libc/include
 	$ELF2HEX -o $HEXFILE $ELFFILE
 
 	# Run, collect results
 	echo "running $1"
-	$VERILATOR +bin=WORK/program.hex 
+	$VERILATOR +bin=WORK/program.hex | awk '/ran for/{ print $3 / 256 " cycles/hash" }'
 }
 
 compileAndRun 'hash.cpp'
+

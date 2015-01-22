@@ -1,40 +1,40 @@
 // 
-// Copyright 2013 Jeff Bush
+// Copyright (C) 2011-2014 Jeff Bush
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//     http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 
 
-#include "output.h"
-
-#define outch(ch) *((volatile unsigned int*) 0xFFFF0004) = ch;
+#include <stdio.h>
 
 //
 // Use duff's device to print a series of characters.  Verifies the switch statement
 // is compiled properly.
 //
-void printBs(int count)
+void __attribute__ ((noinline)) printBs(int count)
 {
 	int n = (count + 7) / 8;
 	switch (count & 7)
 	{
-        case 0: do {    outch('B');
-        case 7:         outch('B'); 
-        case 6:         outch('B');
-        case 5:         outch('B');
-        case 4:         outch('B');
-        case 3:         outch('B');
-        case 2:         outch('B');
-        case 1:         outch('B');
+        case 0: do {    putchar('B');
+        case 7:         putchar('B'); 
+        case 6:         putchar('B');
+        case 5:         putchar('B');
+        case 4:         putchar('B');
+        case 3:         putchar('B');
+        case 2:         putchar('B');
+        case 1:         putchar('B');
                 } while (--n > 0);
 	}
 }
@@ -43,10 +43,10 @@ int main()
 {
 	for (int i = 15; i >= 1; i--)
 	{
-		outch('A')
+		putchar('A');
 		printBs(i);
-		outch('C');
-		outch('\n');
+		putchar('C');
+		putchar('\n');
 	}
 	
 	// CHECK: ABBBBBBBBBBBBBBBC

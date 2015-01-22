@@ -1,36 +1,55 @@
-There are two separate implementations here:
- * v1/ is pretty much functionally complete, running in Verilog simulaton or FPGA
- * v2/ is a complete redesign of the core that attempts to improve performance, but is still a work in progress. It runs in Verilog simulation, but not on FPGA.
+This directory contains the hardware implementation of the processor in 
+SystemVerilog. There are three directories:
+- core/ The GPGPU core itself. The top level module is called 'nyuzi'. 
+Configurable options (cache size, associativity, number of cores) are set in 
+core/defines.sv
+- fpga/ A quick and dirty FPGA testbench that simulates a simple system-on-chip.  
+It  includes a SDRAM controller, VGA controller, and an internal AXI interconnect, 
+along with some other peripherals like a serial port. 
+(more information is [here](https://github.com/jbush001/NyuziProcessor/wiki/FPGA-Implementation-Notes)).
+The makefile for the DE2-115 board target is in fpga/de2-115.
+- testbench/ Files for cycle-accurate simulation with [Verilator](http://www.veripool.org/wiki/verilator). 
+The Makefile will generate an exeutable 'verilator_model' in the bin/ directory. This is heavily 
+instrumented with debug features. The Verilog simulation model accepts the following arguments:
 
-Each core is essentially an SoC component, with an AXI master interface.  There is a quick and dirty FPGA testbench that simulates a simple SoC for testing.  It includes a SDRAM controller, VGA controller, and an internal AXI interconnect, along with some other peripherals like a serial port. Most of the components for this are contained in the fpga_common/ directory.  This is test code and not part of the core proper (more information is here https://github.com/jbush001/GPGPU/wiki/V1-FPGA-Implementation-Notes)
+   |Argument|Value|
+   |--------|-----|
+   | +bin=&lt;hexfile&gt; | File to be loaded to simulator memory at boot. Each line contains a 32-bit hex encoded value |
+   | +regtrace=1 | Enables dumping of register and memory transfers to standard out.  This is used during cosimulation |
+   | +statetrace=1 | Dump thread states each cycle into a file called 'statetrace.txt'.  Used for visualizer app (see tools/visualizer). |
+   | +memdumpfile=&lt;filename&gt; | Dump simulator memory to a binary file at the end of simulation. The next two parameters must also be specified for this to work |
+   | +memdumpbase=&lt;baseaddress&gt;| Base address in simulator memory to start dumping (hexadecimal) |
+   | +memdumplen=&lt;length&gt; | Number of bytes of memory to dump (hexadecimal) |
+   | +autoflushl2=1 | If specified, will copy any dirty data in the L2 to system memory at the end of simulation, before dumping to file |
+   | +profile=&lt;filename&gt; | Samples the program counters periodically and writes to a file.  Use with tools/misc/profile.py |
+   | +block=&lt;filename&gt; | Read file into virtual block device
+   | +randseed=&lt;seed&gt; | Set the seed for the random number generator used to initialize reset state of signals
+   | +dumpmems=1 | Dump the sizes of all internal FIFOs and SRAMs to standard out | 
 
-Within each version, there are a few key files:
- * Makefile: used to build the Verilator simulator modules
- * fpga/: Top level FPGA module that is specific to this core (it references modules from fpga_common/)
- * fpga/de2-115: Files specific to the FPGA family, including a synthesis makefile.
- * core/: The GPGPU component itself
- * testbench/: Includes the top level verilog file, Verilator sundries, and various mock simulator modules like SDRAM or JTAG.
+   To enable a waveform trace, edit the Makefile and uncomment the line:
 
-Being aware of a few (very) loose coding/design conventions that are observed might help understanding this code.
-* A single clock domain is used within the core, always posedge triggered. No multicycle paths are used.
-* The global signal 'reset' is used within the core.  It is asynchronous and active high.
-* SRAMs use generic modules sram_1r1w/sram_2r1w rather than being instantiated directly with logic arrays.
-* One file is used per module and the name of the module is the same as the name of the file.
+       VERILATOR_OPTIONS=--trace --trace-structs
 
-Generally modules can be one of two types: a generic library component (like arbiter or sram_1r1w), or a non-generic component like l1_miss_queue. The following conventions are used for the latter:
+   A .VCD (value change dump) will be written in the directory the model is run from.
+   
+   The top level testbench exposes a few virtual devices
 
-* Each pipeline stage is generally in a single module. Inputs are unregistered, fed into combinational logic, which is then registered on the output side. The order of code in the module tries to reflect the order from input to output, with combinational logic defined at the top of the file (dependent signals being defined before the logic that uses them) and flip flops near the bottom.
-* Signal names are maintained throughout the hierarchy (ie they are not renamed via port mappings)
-* Module ports are grouped by the source/destination module, with a comment identifying such above each group.
-* Identifiers use a common set of suffixes:
+   | address | r/w | description
+   |----|----|----
+   | ffff0004 | r | Always returns 0x12345678
+   | ffff0008 | r | Always returns 0xabcdef9b
+   | ffff0018 | r | Serial status. Bit 1 indicates space available in write FIFO
+   | ffff0020 | w | Serial write register (will output to stdout)
+   | ffff0030 | w | Virtual block device read address
+   | ffff0034 | r | Read word from virtual block device and increment read address
 
-|Suffix|Meaning |
-|----|----|
-| _en  | Use for a signal that enables some operation. Internal enables are always active high. |
-| _oh  | One-hot. No more than one signal will be set, indicating an index |
-| _idx | Signal is an index. Usually used when one-hot signals of the same name are also present |
-| _t   | Typedef |
 
-* Signals that connect pipeline stages have a abbreviated prefix referring to the source stage (for example, id_XXX comes from instruction decode stage) 
-* In any place where a configurable parameter, constant, or typedef is used in more than one non-generic module, it is declared in defines.v (which is included in all files) rather than a module parameter which needs to be daisy chained around.
+This project uses Emacs verilog mode to automatically generate wire definitions (although it isn't
+completely  reliable right now with SystemVerilog).  If you have emacs installed, you can type 
+'make autos' from the command line to update the definitions in batch mode.
+
+This design uses parameterized memories (FIFOs and SRAM blocks), however, not all tool flows support
+this. This can use hard coded memory instances compatible with memory compilers or SRAM wizards.  
+Using `make core/srams.inc` will generate an include file with all used memory sizes in the design.
+The script tools/misc/extract_mems.py can be tweaked to change the module names or parameter formats.
 

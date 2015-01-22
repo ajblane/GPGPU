@@ -5,25 +5,24 @@
 *.vvp
 *.pyc
 *.lst
-*.bmp
 *.hex
 *.elf
 *.jar
 *.o
 *.d
+*.a
+doom1.wad
 statetrace.txt
 a.out
+output.png
+diff.png
 
 OBJECTS
 WORK
 CLASSDIR
 
 obj_dir
-tools/assembler/assemble
-tools/disassembler/disassemble
-tools/simulator/simulator
-tools/mkbmp/mkbmp
-tools/push_bitmap/push_bitmap
-tools/serial_boot/serial_boot
+bin/
+obj
 
 

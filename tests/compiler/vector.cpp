@@ -1,24 +1,24 @@
 // 
-// Copyright 2013 Jeff Bush
+// Copyright (C) 2011-2014 Jeff Bush
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//     http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 
 
-#include "output.h"
+#include <stdio.h>
 
 typedef int veci16 __attribute__((__vector_size__(16 * sizeof(int))));
-
-Output output;
 
 const veci16 kInc = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 
@@ -28,7 +28,8 @@ int main()
 	for (int i = 0; i < 10; i++)
 		a += kInc;
 
-	output << a;
+	for (int i = 0; i < 16; i++)
+		printf("0x%08x\n", a[i]);
 	
 	// CHECK: 0000000a
 	// CHECK: 00000014

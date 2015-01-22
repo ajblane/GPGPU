@@ -1,21 +1,21 @@
 # 
-# Copyright (C) 2014 Jeff Bush
+# Copyright (C) 2011-2014 Jeff Bush
 # 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-# 
-# This library is distributed in the hope that it will be useful,
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # 
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-# Boston, MA  02110-1301, USA.
-# 
+
 
 			.globl _start
 _start:		lea s0, ops
@@ -32,7 +32,7 @@ test_loop:	load_32 s1, (s0)
 			reciprocal s10, s1
 			reciprocal s11, s2
 			add_i s0, s0, 8
-			setge_i s6, s0, s15
+			cmpge_i s6, s0, s15
 			bfalse s6, test_loop
 			setcr s0, 29
 done: 		goto done
@@ -67,6 +67,7 @@ ops:		.float 17.79, 19.32 			; Exponents are equal.  This will carry into the ne
 			.float 0, inf
 			
 			; Regression cases
+			.long 0x3e841893, 0x40780fe1	; Multiplication round causes overflow, need to adjust exponent
 			.long 0xea5d5488, 0xea5d5b5b	; Addition overflow and post normalization round
 			.long 0x3b088889, 0x40c00000	; Multiplication post normalization round
 			.long 0xbc91da53, 0x3f400000	; This one should not do post normalization round

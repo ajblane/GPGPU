@@ -1,51 +1,56 @@
 // 
-// Copyright 2013 Jeff Bush
+// Copyright (C) 2011-2014 Jeff Bush
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//     http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 
 
-#include "output.h"
+#include <stdio.h>
+#include <stdint.h>
 
-typedef int veci16 __attribute__((__vector_size__(16 * sizeof(int))));
+const veci16_t kVecA = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
+const veci16_t kVecB = { 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4 };
 
-Output output;
-
-const veci16 kVecA = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
-const veci16 kVecB = { 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4 };
+void __attribute__ ((noinline)) printVector(veci16_t v)
+{
+	for (int lane = 0; lane < 16; lane++)
+		printf("%d ", v[lane]);
+}
 
 int main()
 {
-	output << (kVecA > kVecB);
-  // CHECK: 0x00000000 0x00000000 0x00000000 0x00000000 
-  // CHECK: 0xffffffff 0x00000000 0x00000000 0x00000000 
-  // CHECK: 0xffffffff 0xffffffff 0x00000000 0x00000000 
-  // CHECK: 0xffffffff 0xffffffff 0xffffffff 0x00000000 
+	printVector(kVecA > kVecB);
+  // CHECK: 0 0 0 0 
+  // CHECK: -1 0 0 0 
+  // CHECK: -1 -1 0 0 
+  // CHECK: -1 -1 -1 0 
 
-	output << (kVecA >= kVecB);
-  // CHECK: 0xffffffff 0x00000000 0x00000000 0x00000000 
-  // CHECK: 0xffffffff 0xffffffff 0x00000000 0x00000000 
-  // CHECK: 0xffffffff 0xffffffff 0xffffffff 0x00000000 
-  // CHECK: 0xffffffff 0xffffffff 0xffffffff 0xffffffff 
+	printVector(kVecA >= kVecB);
+  // CHECK: -1 0 0 0 
+  // CHECK: -1 -1 0 0 
+  // CHECK: -1 -1 -1 0 
+  // CHECK: -1 -1 -1 -1 
 
-	output << (kVecA < kVecB);
-  // CHECK: 0x00000000 0xffffffff 0xffffffff 0xffffffff 
-  // CHECK: 0x00000000 0x00000000 0xffffffff 0xffffffff 
-  // CHECK: 0x00000000 0x00000000 0x00000000 0xffffffff 
-  // CHECK: 0x00000000 0x00000000 0x00000000 0x00000000 
+	printVector(kVecA < kVecB);
+  // CHECK: 0 -1 -1 -1 
+  // CHECK: 0 0 -1 -1 
+  // CHECK: 0 0 0 -1 
+  // CHECK: 0 0 0 0 
 
-	output << (kVecA <= kVecB);
-  // CHECK: 0xffffffff 0xffffffff 0xffffffff 0xffffffff 
-  // CHECK: 0x00000000 0xffffffff 0xffffffff 0xffffffff 
-  // CHECK: 0x00000000 0x00000000 0xffffffff 0xffffffff 
-  // CHECK: 0x00000000 0x00000000 0x00000000 0xffffffff 
+	printVector(kVecA <= kVecB);
+  // CHECK: -1 -1 -1 -1 
+  // CHECK: 0 -1 -1 -1 
+  // CHECK: 0 0 -1 -1 
+  // CHECK: 0 0 0 -1 
 }

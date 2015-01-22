@@ -1,24 +1,28 @@
 // 
 // Copyright (C) 2011-2014 Jeff Bush
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Library General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-// 
-// This library is distributed in the hope that it will be useful,
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// Library General Public License for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 
-// You should have received a copy of the GNU Library General Public
-// License along with this library; if not, write to the
-// Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-// Boston, MA  02110-1301, USA.
-// 
-
 
 import java.io.*;
+
+//
+// Stores trace information.
+// XXX this could be smarter about storing data in runs and using a binary 
+// search to find ranges for display.
+//
 
 class TraceModel
 {
@@ -47,7 +51,7 @@ class TraceModel
 	private void readFile(String filename)
 	{
 		fNumEvents = 0;
-		fNumRows = 4;
+		fNumRows = 4;	// Number of threads XXX should determine dynamically
 		fRawData = new byte[kMaxLines * fNumRows];
 		int offset = 0;
 		try
@@ -67,19 +71,7 @@ class TraceModel
 				{
 					// The constant values we are assigning here correspond
 					// to colors in the array in TraceView.java.
-					boolean valid = Integer.parseInt(tokens[rowIndex * 2]) != 0;
-					int state = Integer.parseInt(tokens[rowIndex * 2 + 1]);
-					if (state <= 2)
-					{
-						if (valid)
-							fRawData[offset++] = (byte) 3;	// Ready
-						else
-							fRawData[offset++] = (byte) 0;	// Wait for icache
-					}
-					else if (state == 3)
-						fRawData[offset++] = (byte) 2;	// RAW wait
-					else
-						fRawData[offset++] = (byte) 1;	// dcache/stbuf wait
+					fRawData[offset++] = (byte) Integer.parseInt(tokens[rowIndex]);
 				}
 			}
 			
