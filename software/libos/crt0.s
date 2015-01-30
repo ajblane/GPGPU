@@ -47,8 +47,10 @@
 _start:				
 					# Set up stack
 					getcr s0, 0			# get my strand ID
+                                        load_32 s0, stack_base_ptr
+                                        load_32 s0, (s0)
+                                        load_32 sp, s0
 					shl s0, s0, 14		# 16k bytes per stack
-					load_32 sp, stacks_base
 					sub_i sp, sp, s0	# Compute stack address
 
 					# Only thread 0 does initialization.  Skip for 
@@ -75,6 +77,6 @@ do_main:			call main
 start_worker:       call workerThread
 1:					goto 1b     # Will never happen
 
-stacks_base:		.long 0x200000
+stack_base_ptr:	.long 0xff200008
 init_array_start:	.long __init_array_start
 init_array_end:		.long __init_array_end
