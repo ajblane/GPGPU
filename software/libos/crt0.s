@@ -46,10 +46,10 @@
 					.type _start,@function
 _start:				
 					# Set up stack
-					getcr s0, 0			# get my strand ID
-                                        load_32 s0, stack_base_ptr
-                                        load_32 s0, (s0)
-                                        load_32 sp, s0
+					     		
+                                        load_32 s0, stack_base_ptr # Load constant 
+                                        load_32 sp, (s0)        # Load SP from location   
+                                        getcr s0, 0	        # get my strand ID
 					shl s0, s0, 14		# 16k bytes per stack
 					sub_i sp, sp, s0	# Compute stack address
 
