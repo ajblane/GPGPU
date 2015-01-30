@@ -34,12 +34,12 @@ using namespace librender;
 
 const int kFbWidth = 640;
 const int kFbHeight = 480;
-	
+volatile unsigned int * frame_base = (volatile unsigned int *) 0xff200010;	
 int main()
 {
 	RenderContext *context = new RenderContext();
 	RenderTarget *renderTarget = new RenderTarget();
-	Surface *colorBuffer = new Surface(kFbWidth, kFbHeight, (void*) 0x200000);
+	Surface *colorBuffer = new Surface(kFbWidth, kFbHeight, (void*)(*frame_base));
 	Surface *zBuffer = new Surface(kFbWidth, kFbHeight);
 	renderTarget->setColorBuffer(colorBuffer);
 	renderTarget->setZBuffer(zBuffer);
