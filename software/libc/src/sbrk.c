@@ -19,9 +19,12 @@
 
 #include <stdlib.h>
 
-volatile unsigned int gNextAlloc = 0x500000;	
+volatile unsigned int * heap_base = (volatile unsigned int *) 0xff20000c;
+volatile unsigned int gNextAlloc = NULL;	
 
 void *sbrk(ptrdiff_t size)
 {
-	return (void*) __sync_fetch_and_add(&gNextAlloc, size);
+     if(gNextAlloc == NULL)
+         gNextAlloc = *(heap_base);  
+     return (void*) __sync_fetch_and_add(&gNextAlloc, size);
 }
