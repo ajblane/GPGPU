@@ -1,6 +1,5 @@
-
-if linux has already boot from an SD card on SoCKit board [0], you can copy these files (preloader-mkimage.bin, soc_system.dtb, soc_system.rbf) into the SD card [1]. In this environment, you can copy programs into the SD card to test software IP.   
-
+To test a customize software IP in GSRD on SoCKit board linux need to be booted from an SD card [0] and these files (preloader-mkimage.bin, soc_system.dtb, soc_system.rbf) need to be updated in the SD card [1]. In this environment the test programs can be copied to the SD card to start with the customize software IP.
+ 
 Reference:
 
 [1] Booting Linux Using Prebuilt SD Card Image:
